@@ -1,12 +1,14 @@
 """
 KrishiMool – Flask Backend
-Crop Price Prediction API using Agmarknet Dataset
+Crop Price Prediction API using Agmarknet Dataset & Random Forest Model
 """
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import pandas as pd
 import numpy as np
 import os, warnings
+import joblib
+
 warnings.filterwarnings('ignore')
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
@@ -15,19 +17,30 @@ CORS(app)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CSV_PATH  = os.path.join(BASE_DIR, 'agmarknet_data.csv')
 
+# -------------------------------------------------------------
+# 1. Load CSV Data (for Historical Charts & Metadata)
+# -------------------------------------------------------------
 df = pd.read_csv(CSV_PATH)
 df.columns = df.columns.str.strip()
-
-# Fix: force convert Date column to datetime, coerce bad values to NaT
 df['Date'] = pd.to_datetime(df['Date'], dayfirst=False, errors='coerce')
-
-# Drop rows where Date could not be parsed
 df = df.dropna(subset=['Date'])
-
 df['Month']     = df['Date'].dt.month
 df['Year']      = df['Date'].dt.year
 df['Commodity'] = df['Commodity'].str.strip()
 df['State']     = df['State'].str.strip()
+
+# -------------------------------------------------------------
+# 2. Load Machine Learning Models
+# -------------------------------------------------------------
+try:
+    rf_model = joblib.load(os.path.join(BASE_DIR, 'rf_price_model.pkl'))
+    le_state = joblib.load(os.path.join(BASE_DIR, 'le_state.pkl'))
+    le_commodity = joblib.load(os.path.join(BASE_DIR, 'le_commodity.pkl'))
+    ML_ENABLED = True
+    print("ML Models Loaded Successfully!")
+except Exception as e:
+    print(f"ML Model not found or error loading: {e}")
+    ML_ENABLED = False
 
 CROP_MAP = {
     'wheat':'Wheat','rice':'Rice','maize':'Maize','sugarcane':'Sugarcane',
@@ -54,30 +67,69 @@ def predict_price(crop_key, state_code, month, arrival_qty, rainfall=None, tempe
     if not crop_name or not state_name:
         return None
     month = int(month)
+    try:
+        arrival_qty = float(arrival_qty)
+    except:
+        arrival_qty = 1000.0
 
     crop_df       = df[df['Commodity'] == crop_name].copy()
     state_crop_df = crop_df[crop_df['State'] == state_name]
     base_pool     = state_crop_df if len(state_crop_df) >= 3 else crop_df if len(crop_df) >= 3 else None
     base_price    = base_pool['Modal_Price'].mean() if base_pool is not None else MSP.get(crop_name, 2000) * 1.05
 
-    month_df    = crop_df[crop_df['Month'] == month]
-    month_avg   = month_df['Modal_Price'].mean() if len(month_df) >= 2 else base_price
-    overall_avg = crop_df['Modal_Price'].mean() if len(crop_df) > 0 else base_price
-    month_factor = (month_avg / overall_avg) if overall_avg > 0 and len(month_df) >= 2 else SEASONAL.get(month, 1.0)
+    # ---------------------------------------------------------
+    # CORE PREDICTION (ML or Heuristic)
+    # ---------------------------------------------------------
+    if ML_ENABLED:
+        try:
+            state_encoded = le_state.transform([state_name])[0] if state_name in le_state.classes_ else 0
+            commodity_encoded = le_commodity.transform([crop_name])[0] if crop_name in le_commodity.classes_ else 0
+            
+            X_input = pd.DataFrame([[state_encoded, commodity_encoded, month, arrival_qty]], 
+                                   columns=['State_Encoded', 'Commodity_Encoded', 'Month', 'Arrival_Qty'])
+            
+            # Predict using Random Forest
+            predicted = round(rf_model.predict(X_input)[0])
+            
+            # Adjust slightly for extreme weather (since we didn't train on weather yet)
+            if rainfall not in (None, ''):
+                r = float(rainfall)
+                if r < 20: predicted *= 1.06
+                elif r > 200: predicted *= 0.96
+            if temperature not in (None, ''):
+                t = float(temperature)
+                if t > 40: predicted *= 0.97
+                elif t < 10: predicted *= 1.04
+                
+            predicted = round(predicted)
+        except Exception as e:
+            print(f"ML Prediction error: {e}")
+            predicted = round(base_price)
+    else:
+        # Fallback Heuristic
+        month_df    = crop_df[crop_df['Month'] == month]
+        month_avg   = month_df['Modal_Price'].mean() if len(month_df) >= 2 else base_price
+        overall_avg = crop_df['Modal_Price'].mean() if len(crop_df) > 0 else base_price
+        month_factor = (month_avg / overall_avg) if overall_avg > 0 and len(month_df) >= 2 else SEASONAL.get(month, 1.0)
+        arrival_factor = max(0.88, 1.0 - (arrival_qty / 100000) * 0.10)
+        rain_factor    = 1.0
+        if rainfall not in (None, ''):
+            r = float(rainfall)
+            rain_factor = 1.06 if r < 20 else (0.96 if r > 200 else 1.0)
+        temp_factor = 1.0
+        if temperature not in (None, ''):
+            t = float(temperature)
+            temp_factor = 0.97 if t > 40 else (1.04 if t < 10 else 1.0)
+        predicted = round(base_price * month_factor * arrival_factor * rain_factor * temp_factor)
 
-    arrival_factor = max(0.88, 1.0 - (float(arrival_qty) / 100000) * 0.10)
-    rain_factor    = 1.0
-    if rainfall not in (None, ''):
-        r = float(rainfall)
-        rain_factor = 1.06 if r < 20 else (0.96 if r > 200 else 1.0)
-    temp_factor = 1.0
-    if temperature not in (None, ''):
-        t = float(temperature)
-        temp_factor = 0.97 if t > 40 else (1.04 if t < 10 else 1.0)
-
-    predicted = round(base_price * month_factor * arrival_factor * rain_factor * temp_factor)
+    # Calculate low/high bounds
     low, high = round(predicted * 0.93), round(predicted * 1.07)
 
+    # ---------------------------------------------------------
+    # HISTORY & TREND FOR UI CHARTS
+    # ---------------------------------------------------------
+    month_df    = crop_df[crop_df['Month'] == month]
+    month_avg   = month_df['Modal_Price'].mean() if len(month_df) >= 2 else base_price
     next_month    = (month % 12) + 1
     next_month_df = crop_df[crop_df['Month'] == next_month]
     if len(next_month_df) >= 2 and len(month_df) >= 2:
