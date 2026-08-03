@@ -324,22 +324,43 @@ setCurrentMonth();
 // ── Tabs Switching ────────────────────────────────────────────────────────────
 const tabPredict = document.getElementById('tabPredict');
 const tabTrends = document.getElementById('tabTrends');
+const tabDisease = document.getElementById('tabDisease');
+
 const predictionTab = document.getElementById('predictionTab');
 const trendsTab = document.getElementById('trendsTab');
+const diseaseTab = document.getElementById('diseaseTab');
 
 tabPredict.addEventListener('click', () => {
   tabPredict.classList.add('active');
   tabTrends.classList.remove('active');
+  if(tabDisease) tabDisease.classList.remove('active');
+  
   predictionTab.style.display = 'block';
   trendsTab.style.display = 'none';
+  if(diseaseTab) diseaseTab.style.display = 'none';
 });
 
 tabTrends.addEventListener('click', () => {
   tabTrends.classList.add('active');
   tabPredict.classList.remove('active');
+  if(tabDisease) tabDisease.classList.remove('active');
+  
   trendsTab.style.display = 'block';
   predictionTab.style.display = 'none';
+  if(diseaseTab) diseaseTab.style.display = 'none';
 });
+
+if(tabDisease) {
+  tabDisease.addEventListener('click', () => {
+    tabDisease.classList.add('active');
+    tabPredict.classList.remove('active');
+    tabTrends.classList.remove('active');
+    
+    diseaseTab.style.display = 'block';
+    predictionTab.style.display = 'none';
+    trendsTab.style.display = 'none';
+  });
+}
 
 // ── Historical Trends Logic ───────────────────────────────────────────────────
 const trendCropSelect = document.getElementById('trendCrop');
@@ -427,3 +448,103 @@ function renderHistoricalChart(chartData) {
   });
 }
 
+// ── Disease Detection Logic ───────────────────────────────────────────────────
+const uploadZone = document.getElementById('uploadZone');
+const leafImageInput = document.getElementById('leafImageInput');
+const imagePreview = document.getElementById('imagePreview');
+const uploadContent = document.querySelector('.upload-content');
+const detectBtn = document.getElementById('detectBtn');
+const detectLoader = document.getElementById('detectLoader');
+const diseaseResultCard = document.getElementById('diseaseResultCard');
+
+let selectedImageFile = null;
+
+if(uploadZone) {
+  uploadZone.addEventListener('click', () => leafImageInput.click());
+
+  uploadZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadZone.classList.add('dragover');
+  });
+
+  uploadZone.addEventListener('dragleave', () => {
+    uploadZone.classList.remove('dragover');
+  });
+
+  uploadZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadZone.classList.remove('dragover');
+    if(e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleImageSelection(e.dataTransfer.files[0]);
+    }
+  });
+
+  leafImageInput.addEventListener('change', (e) => {
+    if(e.target.files && e.target.files.length > 0) {
+      handleImageSelection(e.target.files[0]);
+    }
+  });
+
+  function handleImageSelection(file) {
+    if(!file.type.startsWith('image/')) {
+      alert(t("Please upload a valid image file.", "कृपया वैध फोटो अपलोड करा."));
+      return;
+    }
+    
+    selectedImageFile = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      imagePreview.src = e.target.result;
+      imagePreview.style.display = 'block';
+      uploadContent.style.display = 'none';
+      detectBtn.style.display = 'block';
+      diseaseResultCard.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  detectBtn.addEventListener('click', async () => {
+    if(!selectedImageFile) return;
+
+    // UI Loading state
+    detectBtn.disabled = true;
+    detectLoader.style.display = 'block';
+    detectBtn.querySelector('.btn-text').style.display = 'none';
+    diseaseResultCard.style.display = 'none';
+
+    const formData = new FormData();
+    formData.append('image', selectedImageFile);
+
+    try {
+      const res = await fetch(`${API}/api/detect-disease`, {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+
+      if(!res.ok) throw new Error(data.error || 'API Error');
+
+      // Update Result UI
+      document.getElementById('resDiseaseName').innerText = lang === 'mr' ? data.disease_mr : data.disease;
+      
+      const confColor = data.confidence > 90 ? 'var(--color-primary)' : (data.confidence > 70 ? '#f59e0b' : '#ef4444');
+      document.getElementById('resConfidence').innerHTML = `<span style="color:${confColor}">Confidence: ${data.confidence}%</span>`;
+      
+      document.getElementById('resTreatment').innerText = lang === 'mr' ? data.treatment_mr : data.treatment;
+      
+      diseaseResultCard.style.display = 'block';
+      
+      // Scroll to result
+      setTimeout(() => diseaseResultCard.scrollIntoView({behavior: 'smooth', block: 'nearest'}), 100);
+
+    } catch (err) {
+      console.error(err);
+      alert(t("Failed to analyze image.", "फोटोचे विश्लेषण करण्यात अयशस्वी."));
+    } finally {
+      // Restore UI
+      detectBtn.disabled = false;
+      detectLoader.style.display = 'none';
+      detectBtn.querySelector('.btn-text').style.display = 'inline-block';
+    }
+  });
+}

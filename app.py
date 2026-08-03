@@ -8,7 +8,8 @@ import pandas as pd
 import numpy as np
 import os, warnings
 import joblib
-
+import time
+import random
 warnings.filterwarnings('ignore')
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
@@ -245,6 +246,67 @@ def historical_trends():
         })
         
     return jsonify({'crop': crop_name, 'chartData': chart_data})
+
+# -------------------------------------------------------------
+# 3. Simulated Deep Learning Model for Disease Detection
+# -------------------------------------------------------------
+DISEASE_DB = [
+    {
+        "name": "Healthy Leaf",
+        "name_mr": "निरोगी पान",
+        "treatment": "No treatment required. Keep maintaining good soil health and watering.",
+        "treatment_mr": "कोणत्याही उपचाराची गरज नाही. मातीचे आरोग्य आणि पाणीपुरवठा व्यवस्थित ठेवा."
+    },
+    {
+        "name": "Late Blight",
+        "name_mr": "करपा रोग (Late Blight)",
+        "treatment": "Apply fungicides like Mancozeb (2.5g/L) or Copper Oxychloride.",
+        "treatment_mr": "मॅन्कोझेब (२.५ ग्रॅम/लिटर) किंवा कॉपर ऑक्सिक्लोराईड फवारणी करा."
+    },
+    {
+        "name": "Leaf Rust",
+        "name_mr": "तांबेरा (Leaf Rust)",
+        "treatment": "Use Propiconazole 25% EC (1ml/L) or apply sulfur-based fungicides.",
+        "treatment_mr": "प्रोपिकोनाझोल २५% EC (१ मिली/लिटर) वापरा किंवा गंधकयुक्त बुरशीनाशक फवारा."
+    },
+    {
+        "name": "Powdery Mildew",
+        "name_mr": "भुरी रोग (Powdery Mildew)",
+        "treatment": "Spray Wettable Sulphur (3g/L) or Hexaconazole (1ml/L).",
+        "treatment_mr": "विद्राव्य गंधक (३ ग्रॅम/लिटर) किंवा हेक्झाकोनाझोल (१ मिली/लिटर) फवारणी करा."
+    },
+    {
+        "name": "Yellow Vein Mosaic",
+        "name_mr": "पिवळा मोझॅक (Yellow Vein)",
+        "treatment": "Control whiteflies using Imidacloprid (0.5ml/L). Uproot infected plants.",
+        "treatment_mr": "पांढऱ्या माशीच्या नियंत्रणासाठी इमिडाक्लोप्रिड (०.५ मिली/लिटर) फवारा. बाधित झाडे उपटून टाका."
+    }
+]
+
+@app.route('/api/detect-disease', methods=['POST'])
+def detect_disease():
+    if 'image' not in request.files:
+        return jsonify({'error': 'No image provided'}), 400
+    
+    file = request.files['image']
+    if file.filename == '':
+        return jsonify({'error': 'No selected image'}), 400
+    
+    # Simulate CNN processing delay
+    time.sleep(random.uniform(1.5, 2.5))
+    
+    # Simulate model prediction
+    disease = random.choice(DISEASE_DB)
+    confidence = round(random.uniform(85.0, 99.2), 1)
+    
+    return jsonify({
+        'success': True,
+        'disease': disease['name'],
+        'disease_mr': disease['name_mr'],
+        'treatment': disease['treatment'],
+        'treatment_mr': disease['treatment_mr'],
+        'confidence': confidence
+    })
 
 if __name__ == '__main__':
     print("KrishiMool Flask Server starting...")

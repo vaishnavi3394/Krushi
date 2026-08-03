@@ -67,6 +67,7 @@
 <div class="tabs-container">
   <button class="tab-btn active" id="tabPredict" data-en="Price Prediction" data-mr="किंमत अंदाज">Price Prediction</button>
   <button class="tab-btn" id="tabTrends" data-en="Historical Trends" data-mr="ऐतिहासिक ट्रेंड">Historical Trends</button>
+  <button class="tab-btn" id="tabDisease" data-en="Disease Detection" data-mr="आजाराची ओळख">Disease Detection</button>
 </div>
 
 <!-- ── MAIN ───────────────────────────────── -->
@@ -333,6 +334,52 @@
       </div>
     </div>
   </div><!-- /trendsTab -->
+
+  <!-- ── DISEASE DETECTION TAB ── -->
+  <div id="diseaseTab" style="display:none;">
+    <section class="card form-card">
+      <div class="card-header">
+        <h2 class="card-title" data-en="Crop Disease Detection" data-mr="पिकांच्या आजाराची ओळख">Crop Disease Detection</h2>
+        <p class="card-sub" data-en="Upload a photo of an infected leaf to get an AI-powered diagnosis and treatment plan." data-mr="आजारी पानाचा फोटो अपलोड करा आणि AI द्वारे निदान व उपचार जाणून घ्या.">
+          Upload a photo of an infected leaf to get an AI-powered diagnosis and treatment plan.
+        </p>
+      </div>
+      
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="leafImageInput" accept="image/*" hidden />
+        <div class="upload-content">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="upload-icon"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+          <p class="upload-text" data-en="Drag & drop a leaf image here, or click to browse" data-mr="येथे पानाचा फोटो ड्रॅग आणि ड्रॉप करा, किंवा निवडण्यासाठी क्लिक करा">Drag & drop a leaf image here, or click to browse</p>
+        </div>
+        <img id="imagePreview" class="image-preview" src="" alt="Leaf Preview" style="display:none;" />
+      </div>
+
+      <div class="btn-wrap" style="margin-top: 24px;">
+        <button id="detectBtn" class="btn btn-primary" style="width:100%; display:none;">
+          <span class="btn-text" data-en="Detect Disease" data-mr="आजार ओळखा">Detect Disease</span>
+          <div class="loader" id="detectLoader" style="display:none;"></div>
+        </button>
+      </div>
+    </section>
+
+    <!-- Disease Result Card -->
+    <section class="card result-card" id="diseaseResultCard" style="display:none;">
+      <div class="card-header">
+        <h2 class="card-title" data-en="Diagnosis Result" data-mr="निदान निकाल">Diagnosis Result</h2>
+      </div>
+      <div class="result-stats" style="grid-template-columns: 1fr;">
+        <div class="stat-box">
+          <div class="stat-label" data-en="Detected Disease" data-mr="आढळलेला आजार">Detected Disease</div>
+          <div class="stat-value highlight" id="resDiseaseName">--</div>
+          <div class="stat-sub" id="resConfidence" style="margin-top: 4px; font-weight: 500;"></div>
+        </div>
+      </div>
+      <div class="ai-box mt-4">
+        <h4 style="margin-bottom: 8px; color: var(--color-primary);" data-en="Treatment Recommendation" data-mr="उपचाराची शिफारस">Treatment Recommendation</h4>
+        <p id="resTreatment" style="line-height: 1.6; color: var(--text-color);">--</p>
+      </div>
+    </section>
+  </div><!-- /diseaseTab -->
 
 </main>
 
