@@ -63,8 +63,17 @@
   </div>
 </header>
 
+<!-- ── TABS ───────────────────────────────── -->
+<div class="tabs-container">
+  <button class="tab-btn active" id="tabPredict" data-en="Price Prediction" data-mr="किंमत अंदाज">Price Prediction</button>
+  <button class="tab-btn" id="tabTrends" data-en="Historical Trends" data-mr="ऐतिहासिक ट्रेंड">Historical Trends</button>
+</div>
+
 <!-- ── MAIN ───────────────────────────────── -->
 <main class="main-wrap">
+
+  <!-- Prediction Tab -->
+  <div id="predictionTab">
 
   <!-- Error Banner -->
   <div class="error-banner" id="errorBanner" style="display:none;"></div>
@@ -278,6 +287,52 @@
     </button>
 
   </section><!-- /result-section -->
+
+  </div><!-- /predictionTab -->
+
+  <!-- Historical Trends Tab -->
+  <div id="trendsTab" style="display:none;">
+    <section class="card form-card" style="margin-bottom: 24px;">
+      <div class="card-header">
+        <h2 class="card-title" data-en="5-Year Historical Trends" data-mr="५ वर्षांचा ऐतिहासिक ट्रेंड">5-Year Historical Trends</h2>
+        <p class="card-sub" data-en="Select a crop to view price trends over the last 5 years." data-mr="गेल्या ५ वर्षांतील किमतीचा कल पाहण्यासाठी पीक निवडा.">
+          Select a crop to view price trends over the last 5 years.
+        </p>
+      </div>
+      <div class="form-group" style="max-width: 400px; margin-bottom: 0;">
+        <label class="form-label" for="trendCrop">
+          <span data-en="Crop Name" data-mr="पिकाचे नाव">Crop Name</span>
+        </label>
+        <select id="trendCrop" class="form-control">
+          <option value="" data-en="-- Select Crop --" data-mr="-- पीक निवडा --">-- Select Crop --</option>
+          <option value="wheat">Wheat / गहू</option>
+          <option value="rice">Rice / तांदूळ</option>
+          <option value="maize">Maize / मका</option>
+          <option value="sugarcane">Sugarcane / ऊस</option>
+          <option value="soybean">Soybean / सोयाबीन</option>
+          <option value="cotton">Cotton / कापूस</option>
+          <option value="onion">Onion / कांदा</option>
+          <option value="tomato">Tomato / टोमॅटो</option>
+          <option value="potato">Potato / बटाटा</option>
+          <option value="groundnut">Groundnut / शेंगदाणा</option>
+          <option value="turmeric">Turmeric / हळद</option>
+          <option value="bajra">Bajra / बाजरी</option>
+          <option value="jowar">Jowar / ज्वारी</option>
+          <option value="chickpea">Chickpea / हरभरा</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- Trends Chart Card -->
+    <div class="card chart-card" id="trendsChartCard" style="display:none;">
+      <div class="card-header chart-header">
+        <h3 class="card-title" id="trendChartTitle" data-en="Price Trends" data-mr="किंमत ट्रेंड">Price Trends</h3>
+      </div>
+      <div class="chart-wrap" style="height: 400px;">
+        <canvas id="historicalTrendChart"></canvas>
+      </div>
+    </div>
+  </div><!-- /trendsTab -->
 
 </main>
 

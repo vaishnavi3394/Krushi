@@ -320,3 +320,110 @@ function setCurrentMonth() {
 // ── Init ──────────────────────────────────────────────────────────────────────
 applyLang('en');
 setCurrentMonth();
+
+// ── Tabs Switching ────────────────────────────────────────────────────────────
+const tabPredict = document.getElementById('tabPredict');
+const tabTrends = document.getElementById('tabTrends');
+const predictionTab = document.getElementById('predictionTab');
+const trendsTab = document.getElementById('trendsTab');
+
+tabPredict.addEventListener('click', () => {
+  tabPredict.classList.add('active');
+  tabTrends.classList.remove('active');
+  predictionTab.style.display = 'block';
+  trendsTab.style.display = 'none';
+});
+
+tabTrends.addEventListener('click', () => {
+  tabTrends.classList.add('active');
+  tabPredict.classList.remove('active');
+  trendsTab.style.display = 'block';
+  predictionTab.style.display = 'none';
+});
+
+// ── Historical Trends Logic ───────────────────────────────────────────────────
+const trendCropSelect = document.getElementById('trendCrop');
+const trendsChartCard = document.getElementById('trendsChartCard');
+let historicalChartInst = null;
+
+trendCropSelect.addEventListener('change', async (e) => {
+  const crop = e.target.value;
+  if (!crop) {
+    trendsChartCard.style.display = 'none';
+    if (historicalChartInst) { historicalChartInst.destroy(); historicalChartInst = null; }
+    return;
+  }
+  
+  try {
+    const res = await fetch(`${API}/api/historical-trends?crop=${crop}`);
+    const json = await res.json();
+    
+    if (!res.ok) throw new Error(json.error || 'Failed to fetch trends');
+    
+    renderHistoricalChart(json.chartData);
+    trendsChartCard.style.display = 'block';
+    
+  } catch (err) {
+    console.error("Trends Fetch Error:", err);
+    alert(t("Could not load trends data.", "ट्रेंड डेटा लोड करू शकलो नाही."));
+  }
+});
+
+function renderHistoricalChart(chartData) {
+  const ctx = document.getElementById('historicalTrendChart').getContext('2d');
+  if (historicalChartInst) historicalChartInst.destroy();
+  
+  const isDark = dark;
+  const gridColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
+  const tickColor = isDark ? '#6a8e62' : '#7a9170';
+  
+  historicalChartInst = new Chart(ctx, {
+    type: 'line',
+    data: chartData,
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          labels: { color: tickColor, font: { family: 'DM Sans', size: 13 } }
+        },
+        tooltip: {
+          backgroundColor: isDark ? '#182112' : '#ffffff',
+          borderColor: '#2d7a22',
+          borderWidth: 1,
+          titleColor: isDark ? '#a8c89e' : '#4a5e42',
+          bodyColor:  isDark ? '#e8f4e2' : '#1a2412',
+          padding: 12,
+          callbacks: {
+            label: function(context) {
+              return ` ${context.dataset.label}: ₹${context.parsed.y.toLocaleString('en-IN')}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: gridColor },
+          ticks: { color: tickColor, font: { family: 'DM Sans', size: 12 } },
+          border: { dash: [4, 4] }
+        },
+        y: {
+          grid: { color: gridColor },
+          ticks: {
+            color: tickColor,
+            font: { family: 'DM Sans', size: 12 },
+            callback: v => '₹' + v.toLocaleString('en-IN')
+          },
+          border: { dash: [4, 4] }
+        }
+      }
+    }
+  });
+}
+
