@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>KrishiMool – Crop Price Prediction</title>
+  <link rel="stylesheet" href="/static/css/styles.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<!-- ── NAVBAR ─────────────────────────────── -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <div class="nav-brand">
+      <span class="brand-leaf">🌾</span>
+      <span class="brand-name">KrishiTadnya</span>
+    </div>
+    <div class="nav-actions">
+      <button class="lang-toggle" id="langToggle" title="Switch Language">
+        <span id="langLabel">मराठी</span>
+      </button>
+      <button class="dark-toggle" id="darkToggle" title="Toggle Dark Mode">
+        <span id="darkIcon">🌙</span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ── HERO ───────────────────────────────── -->
+<header class="hero">
+  <div class="hero-bg-decor"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow" data-en="Government of India · Agmarknet Dataset" data-mr="भारत सरकार · अ‍ॅग्रोमार्केट डेटासेट">Government of India · Agmarknet Dataset</p>
+    <h1 class="hero-title">
+      <span data-en="Know Your Crop's" data-mr="आपल्या पिकाची">Know Your Crop's</span><br/>
+      <em data-en="True Price" data-mr="खरी किंमत">True Price</em>
+    </h1>
+    <p class="hero-sub" data-en="AI-powered market price predictions for Indian farmers, backed by real Agmarknet mandi data." data-mr="भारतीय शेतकऱ्यांसाठी AI-आधारित बाजार किंमत अंदाज, खऱ्या मंडी डेटावर आधारित.">
+      AI-powered market price predictions for Indian farmers, backed by real Agmarknet mandi data.
+    </p>
+    <div class="hero-stats">
+      <div class="stat"><span class="stat-val">14</span><span class="stat-lbl" data-en="Crops" data-mr="पिके">Crops</span></div>
+      <div class="stat-div"></div>
+      <div class="stat"><span class="stat-val">12</span><span class="stat-lbl" data-en="States" data-mr="राज्ये">States</span></div>
+      <div class="stat-div"></div>
+      <div class="stat"><span class="stat-val">1800+</span><span class="stat-lbl" data-en="Records" data-mr="नोंदी">Records</span></div>
+    </div>
+  </div>
+  <div class="hero-img-wrap">
+    <div class="hero-card-float">
+      <span class="hcf-icon">📊</span>
+      <div>
+        <span class="hcf-label" data-en="Powered by" data-mr="आधारित">Powered by</span>
+        <span class="hcf-val">Agmarknet <small>GoI</small></span>
+      </div>
+    </div>
+    <img class="hero-img"
+         src="https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=700&q=80"
+         alt="Farmer in field"
+         onerror="this.style.display='none'"/>
+  </div>
+</header>
+
+<!-- ── MAIN ───────────────────────────────── -->
+<main class="main-wrap">
+
+  <!-- Error Banner -->
+  <div class="error-banner" id="errorBanner" style="display:none;"></div>
+
+  <!-- ── PREDICTION FORM ── -->
+  <section class="card form-card" id="predictSection">
+    <div class="card-header">
+      <h2 class="card-title" data-en="Price Prediction" data-mr="किंमत अंदाज">Price Prediction</h2>
+      <p class="card-sub" data-en="Fill in the details below to get a data-backed market forecast from Agmarknet." data-mr="अ‍ॅग्रोमार्केट डेटाच्या आधारे बाजार अंदाजासाठी खाली तपशील भरा.">
+        Fill in the details below to get a data-backed market forecast from Agmarknet.
+      </p>
+    </div>
+
+    <form id="predictForm" autocomplete="off">
+      <div class="form-grid">
+
+        <div class="form-group">
+          <label class="form-label" for="crop">
+            <span data-en="Crop Name" data-mr="पिकाचे नाव">Crop Name</span>
+            <span class="tooltip"
+                  data-tip-en="Select the crop you want to sell."
+                  data-tip-mr="आपण विकू इच्छित पीक निवडा.">?</span>
+          </label>
+          <select id="crop" class="form-control" required>
+            <option value="" data-en="-- Select Crop --" data-mr="-- पीक निवडा --">-- Select Crop --</option>
+            <option value="wheat">Wheat / गहू</option>
+            <option value="rice">Rice / तांदूळ</option>
+            <option value="maize">Maize / मका</option>
+            <option value="sugarcane">Sugarcane / ऊस</option>
+            <option value="soybean">Soybean / सोयाबीन</option>
+            <option value="cotton">Cotton / कापूस</option>
+            <option value="onion">Onion / कांदा</option>
+            <option value="tomato">Tomato / टोमॅटो</option>
+            <option value="potato">Potato / बटाटा</option>
+            <option value="groundnut">Groundnut / शेंगदाणा</option>
+            <option value="turmeric">Turmeric / हळद</option>
+            <option value="bajra">Bajra / बाजरी</option>
+            <option value="jowar">Jowar / ज्वारी</option>
+            <option value="chickpea">Chickpea / हरभरा</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="state">
+            <span data-en="State / Location" data-mr="राज्य / स्थान">State / Location</span>
+            <span class="tooltip"
+                  data-tip-en="Select your state for localised pricing."
+                  data-tip-mr="स्थानिक किंमतीसाठी आपले राज्य निवडा.">?</span>
+          </label>
+          <select id="state" class="form-control" required>
+            <option value="">-- Select State --</option>
+            <option value="MH">Maharashtra / महाराष्ट्र</option>
+            <option value="UP">Uttar Pradesh / उत्तर प्रदेश</option>
+            <option value="MP">Madhya Pradesh / मध्य प्रदेश</option>
+            <option value="PB">Punjab / पंजाब</option>
+            <option value="HR">Haryana / हरियाणा</option>
+            <option value="GJ">Gujarat / गुजरात</option>
+            <option value="RJ">Rajasthan / राजस्थान</option>
+            <option value="AP">Andhra Pradesh / आंध्र प्रदेश</option>
+            <option value="KA">Karnataka / कर्नाटक</option>
+            <option value="TN">Tamil Nadu / तमिळनाडू</option>
+            <option value="WB">West Bengal / पश्चिम बंगाल</option>
+            <option value="BR">Bihar / बिहार</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="month">
+            <span data-en="Month" data-mr="महिना">Month</span>
+            <span class="tooltip"
+                  data-tip-en="Month affects seasonal price variation."
+                  data-tip-mr="महिना हंगामी किंमत बदलावर परिणाम करतो.">?</span>
+          </label>
+          <select id="month" class="form-control" required>
+            <option value="">-- Select Month --</option>
+            <option value="1">January / जानेवारी</option>
+            <option value="2">February / फेब्रुवारी</option>
+            <option value="3">March / मार्च</option>
+            <option value="4">April / एप्रिल</option>
+            <option value="5">May / मे</option>
+            <option value="6">June / जून</option>
+            <option value="7">July / जुलै</option>
+            <option value="8">August / ऑगस्ट</option>
+            <option value="9">September / सप्टेंबर</option>
+            <option value="10">October / ऑक्टोबर</option>
+            <option value="11">November / नोव्हेंबर</option>
+            <option value="12">December / डिसेंबर</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="arrival">
+            <span data-en="Arrival Quantity (Quintals)" data-mr="आगमन प्रमाण (क्विंटल)">Arrival Quantity (Quintals)</span>
+            <span class="tooltip"
+                  data-tip-en="Total quantity brought to the market. Higher supply slightly lowers price."
+                  data-tip-mr="बाजारात आणलेले एकूण प्रमाण. जास्त पुरवठा किंमत थोडी कमी करतो.">?</span>
+          </label>
+          <input type="number" id="arrival" class="form-control" placeholder="e.g. 250" min="1" required/>
+        </div>
+
+        <div class="form-group optional-field">
+          <label class="form-label" for="rainfall">
+            <span data-en="Rainfall (mm) — Optional" data-mr="पाऊस (मिमी) — पर्यायी">Rainfall (mm) — Optional</span>
+            <span class="tooltip"
+                  data-tip-en="Recent rainfall affects crop supply. &lt;20mm = drought, &gt;200mm = excess."
+                  data-tip-mr="अलीकडील पाऊस पुरवठ्यावर परिणाम करतो.">?</span>
+          </label>
+          <input type="number" id="rainfall" class="form-control" placeholder="e.g. 80" min="0"/>
+        </div>
+
+        <div class="form-group optional-field">
+          <label class="form-label" for="temp">
+            <span data-en="Temperature (°C) — Optional" data-mr="तापमान (°C) — पर्यायी">Temperature (°C) — Optional</span>
+            <span class="tooltip"
+                  data-tip-en="Extreme temperatures (&gt;40°C or &lt;10°C) affect crop yield."
+                  data-tip-mr="अत्यंत तापमान पीक उत्पादनावर परिणाम करते.">?</span>
+          </label>
+          <input type="number" id="temp" class="form-control" placeholder="e.g. 32" min="-10" max="60"/>
+        </div>
+
+      </div><!-- /form-grid -->
+
+      <button type="submit" class="predict-btn" id="predictBtn">
+        <span class="btn-text" data-en="Predict Price" data-mr="किंमत अंदाजा">Predict Price</span>
+        <span class="btn-icon">→</span>
+      </button>
+    </form>
+  </section>
+
+  <!-- ── LOADING ── -->
+  <div class="loading-wrap" id="loadingWrap" style="display:none;">
+    <div class="loading-dots"><span></span><span></span><span></span></div>
+    <p class="loading-text" data-en="Querying Agmarknet records…" data-mr="मंडी डेटा तपासत आहे…">Querying Agmarknet records…</p>
+  </div>
+
+  <!-- ── RESULTS ── -->
+  <section class="result-section" id="resultSection" style="display:none;">
+
+    <div class="result-grid">
+
+      <!-- Price Card -->
+      <div class="card result-card price-card">
+        <div class="rc-eyebrow" data-en="Predicted Modal Price" data-mr="अंदाजित मोडल किंमत">Predicted Modal Price</div>
+        <div class="price-display">
+          <span class="price-sym">₹</span>
+          <span class="price-val" id="priceVal">--</span>
+          <span class="price-unit">/qtl</span>
+        </div>
+        <div class="price-range"  id="priceRange"></div>
+        <div class="sell-advice"  id="sellAdvice"></div>
+        <div class="trend-badge"  id="trendBadge"></div>
+        <div class="data-src-note" id="dataSrcNote"></div>
+      </div>
+
+      <!-- Mini cards -->
+      <div class="result-mini-cards">
+        <div class="card mini-card">
+          <span class="mini-icon">📦</span>
+          <div>
+            <span class="mini-label" data-en="Market Demand"  data-mr="बाजार मागणी">Market Demand</span>
+            <span class="mini-val" id="demandVal">--</span>
+          </div>
+        </div>
+        <div class="card mini-card">
+          <span class="mini-icon">🏪</span>
+          <div>
+            <span class="mini-label" data-en="Supply Level"   data-mr="पुरवठा पातळी">Supply Level</span>
+            <span class="mini-val" id="supplyVal">--</span>
+          </div>
+        </div>
+        <div class="card mini-card">
+          <span class="mini-icon">💰</span>
+          <div>
+            <span class="mini-label" data-en="MSP Reference"  data-mr="किमान आधारभूत किंमत">MSP Reference</span>
+            <span class="mini-val" id="mspVal">--</span>
+          </div>
+        </div>
+        <div class="card mini-card">
+          <span class="mini-icon">🕐</span>
+          <div>
+            <span class="mini-label" data-en="Best Time to Sell" data-mr="विकण्याचा उत्तम वेळ">Best Time to Sell</span>
+            <span class="mini-val" id="bestTimeVal">--</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /result-grid -->
+
+    <!-- Nearby Markets -->
+    <div class="card markets-card" id="marketsCard" style="display:none;">
+      <div class="card-header" style="margin-bottom:14px;">
+        <h3 class="card-title" style="font-size:18px;"
+            data-en="Nearby Markets" data-mr="जवळील बाजारपेठ">Nearby Markets</h3>
+      </div>
+      <div class="markets-list" id="marketsList"></div>
+    </div>
+
+    <!-- Chart -->
+    <div class="card chart-card">
+      <div class="card-header chart-header">
+        <h3 class="card-title" data-en="6-Month Price Trend" data-mr="6 महिन्यांचा किंमत कल">6-Month Price Trend</h3>
+        <span class="chart-crop-label" id="chartCropLabel"></span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="priceChart"></canvas>
+      </div>
+    </div>
+
+    <button class="reset-btn" id="resetBtn">
+      <span data-en="← New Prediction" data-mr="← नवीन अंदाज">← New Prediction</span>
+    </button>
+
+  </section><!-- /result-section -->
+
+</main>
+
+<!-- ── FOOTER ─────────────────────────────── -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <span>🌾</span>
+      <span class="brand-name">KrishiTadnya</span>
+    </div>
+    <p class="footer-note" data-en="Data sourced from Agmarknet (Government of India). Predictions are indicative only and not financial advice." data-mr="डेटा अ‍ॅग्रोमार्केट (भारत सरकार) कडून. अंदाज केवळ सूचक आहेत, आर्थिक सल्ला नाही.">
+      Data sourced from Agmarknet (Government of India). Predictions are indicative only and not financial advice.
+    </p>
+    <div class="footer-links">
+      <a href="https://agmarknet.gov.in" target="_blank">Agmarknet</a>
+      <span>·</span>
+      <a href="/api/stats" target="_blank">API Stats</a>
+      <span>·</span>
+      <a href="#">About</a>
+    </div>
+    <p class="footer-copy">© 2025 KrishiMool · Built for Indian Farmers 🇮🇳</p>
+  </div>
+</footer>
+
+<!-- Tooltip popup -->
+<div class="tooltip-popup" id="tooltipPopup"></div>
+
+<script src="/static/js/script.js"></script>
+</body>
+</html>
