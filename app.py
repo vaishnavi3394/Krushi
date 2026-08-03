@@ -150,7 +150,7 @@ def market_prices():
     return jsonify({'crop': crop_name, 'records': recent.to_dict(orient='records')})
 
 if __name__ == '__main__':
-    print("🌾 KrishiMool Flask Server starting...")
+    print("KrishiMool Flask Server starting...")
     print(f"   Dataset: {len(df)} records | Crops: {df['Commodity'].nunique()} | States: {df['State'].nunique()}")
     print("   Open: http://localhost:5000")
     app.run(debug=True, port=5000)
