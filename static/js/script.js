@@ -187,6 +187,55 @@ function showResults(d) {
   renderChart(d.history_labels, d.history_prices, d.crop_name);
 }
 
+// ── Weather Fetch (Open-Meteo) ───────────────────────────────────────────────
+const STATE_COORDS = {
+  'MH': { lat: 19.75, lon: 75.71 },
+  'UP': { lat: 26.84, lon: 80.94 },
+  'MP': { lat: 22.97, lon: 78.65 },
+  'PB': { lat: 31.14, lon: 75.34 },
+  'HR': { lat: 29.05, lon: 76.08 },
+  'GJ': { lat: 22.25, lon: 71.19 },
+  'RJ': { lat: 27.02, lon: 74.21 },
+  'AP': { lat: 15.91, lon: 79.74 },
+  'KA': { lat: 15.31, lon: 75.71 },
+  'TN': { lat: 11.12, lon: 78.65 },
+  'WB': { lat: 22.98, lon: 87.85 },
+  'BR': { lat: 25.09, lon: 85.31 }
+};
+
+document.getElementById('state').addEventListener('change', async (e) => {
+  const code = e.target.value;
+  const tempInput = document.getElementById('temp');
+  const rainInput = document.getElementById('rainfall');
+  
+  if (!code || !STATE_COORDS[code]) {
+    tempInput.placeholder = 'e.g. 28';
+    rainInput.placeholder = 'e.g. 50';
+    return;
+  }
+  
+  // Show loading state
+  tempInput.placeholder = 'Fetching...';
+  rainInput.placeholder = 'Fetching...';
+  tempInput.value = '';
+  rainInput.value = '';
+
+  try {
+    const { lat, lon } = STATE_COORDS[code];
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation`);
+    const data = await res.json();
+    
+    if (data.current) {
+      tempInput.value = data.current.temperature_2m || '';
+      rainInput.value = data.current.precipitation || 0;
+    }
+  } catch (err) {
+    console.error("Weather Fetch Error:", err);
+    tempInput.placeholder = 'e.g. 28 (Error)';
+    rainInput.placeholder = 'e.g. 50 (Error)';
+  }
+});
+
 // ── Form Submit ───────────────────────────────────────────────────────────────
 const form           = document.getElementById('predictForm');
 const loadingWrap    = document.getElementById('loadingWrap');
